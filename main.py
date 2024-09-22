@@ -5,7 +5,7 @@ import io
 from PIL import Image
 import json
 from fastapi.middleware.cors import CORSMiddleware
-
+import base64
 
 model = get_yolov5()
 
@@ -63,8 +63,11 @@ async def detect_food_return_base64_img(file: bytes = File(...)):
     input_image = get_image_from_bytes(file)
     results = model(input_image)
     results.render()  # updates results.imgs with boxes and labels
-    for img in results.imgs:
+    print(results)
+    print('asdawdawd')
+    for img in results.render():
         bytes_io = io.BytesIO()
         img_base64 = Image.fromarray(img)
         img_base64.save(bytes_io, format="jpeg")
-    return Response(content=bytes_io.getvalue(), media_type="image/jpeg")
+    image_data = base64.b64encode(bytes_io.getvalue()).decode()
+    return {"image": image_data, "result": json.dumps(results.pandas().xyxy[0].to_dict(orient="records"))}
